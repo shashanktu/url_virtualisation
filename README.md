@@ -1,296 +1,302 @@
 # Service Virtualization Platform
 
-A powerful web-based tool for creating and managing mock APIs, designed to help development teams test their applications without relying on live external services.
+## Overview
 
-## What Does This Do?
+A comprehensive web-based service virtualization platform designed to streamline API testing and development workflows. This enterprise-grade solution enables development teams to create, manage, and maintain mock API endpoints without dependency on live external services.
 
-Think of this as your personal API simulator. Instead of hitting real APIs during development or testing, you can:
-- Test an API once to see what it returns
-- Save that response as a "mock" version
-- Use the mock version whenever you need it
-- Keep your mocks updated automatically with a scheduler
+## Key Features
 
-This is incredibly useful when:
-- The real API is slow or unreliable
-- You're working offline
-- You want to test edge cases without affecting production data
-- You need consistent responses for automated testing
+- **API Mocking & Virtualization**: Create persistent mock endpoints from real API responses
+- **Automated Response Updates**: Scheduled synchronization with source APIs to maintain data freshness
+- **Multi-Environment Support**: Segregate mocks across Development, Test, Staging, and Production environments
+- **Comprehensive Request Configuration**: Support for headers, authentication, query parameters, and request bodies
+- **Real-time API Testing**: Validate APIs before creating mocks with detailed response inspection
+- **Centralized Management**: Web-based dashboard for viewing and managing all virtualized services
 
-## The Big Picture
+## Use Cases
 
-The platform has three main components working together:
+- **Development Continuity**: Maintain productivity when external APIs are unavailable or unreliable
+- **Offline Development**: Work without internet connectivity using cached API responses
+- **Test Automation**: Ensure consistent, predictable responses for automated test suites
+- **Edge Case Testing**: Simulate specific scenarios without affecting production systems
+- **Performance Testing**: Eliminate external API latency from performance benchmarks
 
-1. **Command Center** - A friendly web interface where you configure and test APIs
-2. **Routing Portal** - A dashboard showing all your saved mock APIs
-3. **Scheduler** - A background worker that keeps your mocks fresh by periodically checking the real APIs
+## Architecture
 
-## Getting Started
+The platform consists of three core components:
 
-### What You'll Need
+### 1. Command Center (`Service_Virtualization.py`)
+Web interface for API configuration, testing, and mock creation. Built with Streamlit for rapid development and intuitive user experience.
 
-- Python 3.7 or newer
-- A PostgreSQL database (we're using Retool's hosted database)
-- Internet connection for testing real APIs
+### 2. Routing Portal (`pages/Routing_Portal.py`)
+Administrative dashboard displaying all virtualized services with metadata, timestamps, and management capabilities.
 
-### Installation
+### 3. Scheduler (`scheduler.py`)
+Background service that periodically polls source APIs and updates mock responses to maintain data accuracy.
 
-1. Clone or download this project to your computer
+## Technical Requirements
 
-2. Install the required Python packages:
+### System Requirements
+- **Python**: 3.12 or higher
+- **Database**: PostgreSQL 12+
+- **Network**: Internet connectivity for API polling
+- **Memory**: Minimum 2GB RAM recommended
+
+### Dependencies
+```
+streamlit - Web application framework
+requests - HTTP client library
+psycopg2-binary - PostgreSQL database adapter
+pandas - Data manipulation and analysis
+schedule - Job scheduling library
+```
+
+## Installation
+
+### 1. Clone Repository
+```bash
+git clone <repository-url>
+cd url_virtualisation
+```
+
+### 2. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Make sure your database credentials are set up in `sql.py` (they're already configured for the Retool database)
+### 3. Database Configuration
+Database credentials are configured in `sql.py`. The application uses a hosted PostgreSQL instance on Retool. Update connection parameters if using a different database:
 
-### Running the Application
+```python
+def connect_to_retool():
+    return psycopg2.connect(
+        host="your-host",
+        database="your-database",
+        user="your-username",
+        password="your-password",
+        sslmode="require"
+    )
+```
 
-Start the web interface:
+### 4. Initialize Database
+The application automatically creates required tables on first run via `create_table()` function in `sql.py`.
+
+## Usage
+
+### Starting the Application
+
+**Launch Web Interface:**
 ```bash
 streamlit run Service_Virtualization.py
 ```
+Access at: `http://localhost:8501`
 
-The app will open in your browser at `http://localhost:8501`
-
-To run the scheduler (keeps mocks updated):
+**Start Background Scheduler:**
 ```bash
 python scheduler.py
 ```
 
-## How to Use It
+### Creating a Mock API
 
-### Creating Your First Mock API
+1. **Configure Request**
+   - Enter API name and description
+   - Select HTTP method (GET, POST, PUT, DELETE, PATCH)
+   - Provide the source API URL
 
-1. **Open the Command Center** - This is the main page when you start the app
+2. **Set Request Parameters**
+   - **Headers Tab**: Add custom HTTP headers
+   - **Authorization Tab**: Configure authentication (Bearer Token, Basic Auth, API Key)
+   - **Body Tab**: Define request payload for POST/PUT operations
+   - **Params Tab**: Add query string parameters
+   - **API Details Tab**: Set environment and line of business
 
-2. **Fill in the basics:**
-   - Give your API a name (like "Get User Profile")
-   - Add a description so you remember what it does later
-   - Choose the HTTP method (GET, POST, etc.)
-   - Enter the real API URL
+3. **Validate API**
+   - Click "Validate" to test the source API
+   - Review response status, headers, and body
+   - Verify response time and data accuracy
 
-3. **Configure the request:**
-   - **Headers tab**: Add any custom headers the API needs
-   - **Authorization tab**: Set up authentication (Bearer token, API key, etc.)
-   - **Body tab**: For POST/PUT requests, add the request body
-   - **Params tab**: Add query parameters
-   - **API Details tab**: Specify environment (Dev/Test/Prod) and line of business
+4. **Create Mock**
+   - Click "Mock API" after successful validation
+   - System stores configuration and response in database
+   - Routing URL is generated for mock endpoint access
 
-4. **Test it first:**
-   - Click "Validate" to test the real API
-   - You'll see the response, status code, and how long it took
-   - Make sure it works before creating the mock
+### Accessing Mock APIs
 
-5. **Create the mock:**
-   - Once validated, click "Mock API"
-   - The system saves everything to the database
-   - You get a routing URL you can use instead of the real API
-
-### Viewing Your Mocks
-
-Navigate to the "Routing Portal" page (in the sidebar) to see:
-- All your saved mock APIs in a table
-- When each was created and last updated
-- The routing URL for each mock
-- Options to delete mocks you no longer need
-
-### Using Your Mock APIs
-
-Instead of calling the real API, use the routing URL:
+Mock endpoints are accessible via the routing service:
 ```
-https://routing-portal-d3id.vercel.app/route?routing_url=/your/api/path
+https://routing-portal-d3id.vercel.app/route?routing_url=<your-api-path>
 ```
 
-The routing service will return the saved mock response instantly.
+### Managing Mocks
 
-## Understanding the Code
-
-### Service_Virtualization.py
-The main application file. It's a Streamlit app that provides the user interface for:
-- Configuring API requests with all the bells and whistles
-- Testing APIs to see if they work
-- Saving successful responses as mocks
-- Displaying responses in a clean, readable format
-
-Key features:
-- Custom CSS for a polished look
-- Tabbed interface for organizing request configuration
-- Real-time API testing with response preview
-- Automatic database insertion when creating mocks
-
-### Routing_Portal.py
-A separate page that shows all your saved mocks in a table format. It:
-- Fetches all records from the database
-- Displays them in an organized table
-- Converts timestamps to IST (Indian Standard Time)
-- Provides delete functionality for each record
-- Shows tooltips with descriptions when you hover over names
-
-### sql.py
-The database layer that handles all PostgreSQL operations:
-
-- `connect_to_retool()` - Establishes database connection
-- `create_table()` - Sets up the service_virtualisation table if it doesn't exist
-- `insert_url_data()` - Saves a new mock API to the database
-- `get_url_data()` - Retrieves mock APIs (all or by ID)
-- `update_mock_data()` - Updates the response for an existing mock
-- `delete_response()` - Removes the response data for a mock
-
-The database schema includes:
-- Basic info (name, description)
-- URLs (original and routing)
-- Request details (method, headers, parameters)
-- Response data
-- Metadata (LOB, environment, timestamps)
-
-### scheduler.py
-A background service that keeps your mocks up-to-date:
-
-- Runs on a configurable schedule (default: every 2 minutes)
-- Fetches all mock APIs from the database
-- Hits each original URL with the saved configuration
-- Updates the mock response if the real API returns new data
-- Logs everything for troubleshooting
-
-The scheduler is smart about:
-- Handling different HTTP methods (GET, POST, PUT, DELETE)
-- Parsing JSON headers and parameters
-- Timing requests to track performance
-- Gracefully handling failures without crashing
-
-## Configuration Files
-
-### requirements.txt
-Lists all Python dependencies:
-- `streamlit` - Web framework for the UI
-- `requests` - HTTP library for calling APIs
-- `psycopg2-binary` - PostgreSQL database driver
-- `pandas` - Data manipulation for displaying tables
-- `schedule` - Task scheduling for the background worker
-
-### .streamlit/config.toml
-Streamlit configuration:
-- Runs in headless mode (no browser auto-open)
-- Disables CORS for easier deployment
-- Disables XSRF protection for API testing
-- Turns off usage statistics
-
-### vercel.json
-Deployment configuration for Vercel hosting:
-- Specifies Python runtime
-- Routes all traffic to the main app
-- Enables serverless deployment
+Navigate to the Routing Portal to:
+- View all virtualized services in tabular format
+- Monitor creation and update timestamps
+- Delete response data for specific mocks
+- Access routing URLs for integration
 
 ## Database Schema
 
-The `service_virtualisation` table stores:
+### `service_virtualisation` Table
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | SERIAL | Unique identifier |
-| name | VARCHAR(255) | Human-readable name |
-| description | TEXT | Detailed description |
-| original_url | TEXT | The real API endpoint |
-| operation | VARCHAR(50) | HTTP method (GET, POST, etc.) |
-| routing_url | TEXT | Path for the mock API |
-| headers | TEXT | JSON string of request headers |
-| parameters | TEXT | JSON string of query parameters |
-| response | JSON | The saved API response |
-| api_details | TEXT | Additional metadata |
-| lob | VARCHAR(100) | Line of business |
-| environment | VARCHAR(50) | Environment (Dev/Test/Prod) |
-| created_at | TIMESTAMP | When the mock was created |
-| updated_at | TIMESTAMP | Last update time |
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | SERIAL | PRIMARY KEY | Unique record identifier |
+| name | VARCHAR(255) | NOT NULL | Human-readable service name |
+| description | TEXT | - | Detailed service description |
+| original_url | TEXT | NOT NULL | Source API endpoint |
+| operation | VARCHAR(50) | - | HTTP method |
+| routing_url | TEXT | NOT NULL | Mock endpoint path |
+| headers | TEXT | - | JSON-encoded request headers |
+| parameters | TEXT | - | JSON-encoded query parameters |
+| response | JSON | - | Cached API response |
+| api_details | TEXT | - | Additional metadata |
+| lob | VARCHAR(100) | - | Line of business |
+| environment | VARCHAR(50) | - | Deployment environment |
+| created_at | TIMESTAMP | DEFAULT NOW() | Record creation timestamp |
+| updated_at | TIMESTAMP | DEFAULT NOW() | Last modification timestamp |
 
-## Tips and Best Practices
+## Core Modules
 
-**Naming Your Mocks**
-- Use descriptive names like "Get Customer by ID" instead of "API 1"
-- Add descriptions to explain what the API does and any special considerations
+### `sql.py` - Database Layer
+**Functions:**
+- `connect_to_retool()`: Establishes database connection
+- `create_table()`: Initializes database schema
+- `insert_url_data()`: Persists new mock configuration
+- `get_url_data()`: Retrieves mock records
+- `update_mock_data()`: Updates cached responses
+- `delete_response()`: Nullifies response data
 
-**Testing Before Mocking**
-- Always validate the API first to ensure it works
-- Check the response to make sure it's what you expect
-- Verify authentication is working correctly
+### `scheduler.py` - Background Processor
+**Capabilities:**
+- Configurable polling intervals (default: 2 minutes)
+- Automatic response synchronization
+- Comprehensive error handling and logging
+- Support for all HTTP methods
+- Request timing and performance tracking
 
-**Organizing Your Mocks**
-- Use the LOB (Line of Business) field to group related APIs
-- Set the environment to keep Dev/Test/Prod mocks separate
-- Add meaningful descriptions for complex APIs
+### Configuration Files
 
-**Keeping Mocks Fresh**
-- Run the scheduler regularly to update responses
-- Check the logs (scheduler.log) to see if any APIs are failing
-- Delete old mocks you're no longer using
+**`requirements.txt`**: Python package dependencies
 
-**Security Considerations**
-- Don't store sensitive API keys in the mock data
-- Use environment variables for credentials when possible
-- Be careful about what data you save in mock responses
+**`.streamlit/config.toml`**: Streamlit server configuration
+```toml
+[server]
+headless = true
+port = 8501
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
+```
+
+## Best Practices
+
+### Naming Conventions
+- Use descriptive, action-oriented names (e.g., "Get Customer Profile", "Create Order")
+- Include API version in name when applicable
+- Document purpose and special considerations in description field
+
+### Security
+- Avoid storing production credentials in mock configurations
+- Use environment variables for sensitive data
+- Regularly audit and remove unused mocks
+- Implement access controls for production environments
+
+### Maintenance
+- Run scheduler continuously to maintain data freshness
+- Monitor `scheduler.log` for API failures
+- Periodically review and clean up obsolete mocks
+- Document mock dependencies and usage
+
+### Organization
+- Leverage LOB field to group related services
+- Use environment field to segregate mocks by deployment stage
+- Maintain consistent naming conventions across teams
 
 ## Troubleshooting
 
-**Can't connect to database**
-- Check the credentials in sql.py
-- Make sure your network allows connections to Retool's database
-- Verify the database exists and the table is created
+### Database Connection Issues
+- Verify credentials in `sql.py`
+- Check network connectivity to database host
+- Ensure PostgreSQL service is running
+- Confirm SSL/TLS requirements are met
 
-**API validation fails**
-- Check if the URL is correct and accessible
-- Verify authentication credentials are valid
-- Look at the error message for specific details
-- Try the API in a tool like Postman first
+### API Validation Failures
+- Verify source URL accessibility
+- Check authentication credentials
+- Review request headers and parameters
+- Test endpoint using external tools (Postman, curl)
 
-**Scheduler not updating mocks**
-- Check scheduler.log for error messages
-- Verify the original URLs are still accessible
-- Make sure the scheduler process is running
-- Check if the database connection is working
+### Scheduler Issues
+- Review `scheduler.log` for error details
+- Verify source APIs are accessible
+- Confirm database connectivity
+- Check Python process is running
 
-**Mock API returns old data**
-- Run the scheduler manually to force an update
-- Check when the mock was last updated in the Routing Portal
-- Verify the original API is returning new data
+### Stale Mock Data
+- Verify scheduler is running
+- Check last update timestamp in Routing Portal
+- Manually trigger scheduler for immediate update
+- Confirm source API is returning updated data
 
 ## Deployment
 
-The app is configured for deployment on Vercel:
+### Recommended Platforms
+- **Streamlit Cloud**: Native Streamlit hosting (recommended)
+- **Heroku**: Full application support with worker dynos
+- **Railway.app**: Simple deployment with automatic scaling
+- **Render.com**: Free tier available for testing
+- **AWS EC2/ECS**: Enterprise-grade infrastructure
+- **Google Cloud Run**: Containerized deployment
+- **Azure App Service**: Microsoft cloud platform
 
-1. Push your code to a Git repository
-2. Connect the repository to Vercel
-3. Vercel will automatically detect the configuration
-4. The app will be deployed and accessible via a public URL
+### Deployment Steps (Streamlit Cloud)
+1. Push code to GitHub repository
+2. Navigate to https://share.streamlit.io
+3. Connect GitHub account and select repository
+4. Configure environment variables if needed
+5. Deploy application
 
-For the scheduler, you'll need to run it separately on a server or use a service like:
-- AWS Lambda with CloudWatch Events
-- Google Cloud Functions with Cloud Scheduler
-- A simple VPS running the Python script
+**Note**: Vercel is not suitable for Streamlit applications due to serverless function size limitations (250MB).
+
+## Logging
+
+The scheduler generates detailed logs in `scheduler.log`:
+- Request timestamps and durations
+- HTTP status codes
+- Error messages and stack traces
+- Success/failure statistics
 
 ## Future Enhancements
 
-Some ideas for extending this platform:
-- Add response templating for dynamic mock data
-- Support for GraphQL APIs
-- Request/response history tracking
-- API performance analytics
-- Team collaboration features
-- Import/export mock configurations
-- Webhook support for real-time updates
+- Response templating with dynamic data generation
+- GraphQL API support
+- Request/response history and versioning
+- Performance analytics and monitoring dashboards
+- Multi-user collaboration features
+- Import/export functionality for mock configurations
+- Webhook integration for real-time updates
+- API contract testing and validation
 
 ## Support
 
-If you run into issues:
-1. Check the logs (scheduler.log for the scheduler)
-2. Look at the browser console for frontend errors
+For technical support:
+1. Review application logs (`scheduler.log`)
+2. Check browser console for frontend errors
 3. Verify database connectivity
-4. Review the configuration files
+4. Consult configuration files
+5. Contact ValueMomentum development team
 
 ## License
 
-This project is proprietary software owned by ValueMomentum.
+This software is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
+
+**Copyright © 2026 ValueMomentum. All Rights Reserved.**
 
 ---
 
-**Built with ❤️ by the ValueMomentum Team**
+**Developed by ValueMomentum Engineering Team**
 
-*Making API testing easier, one mock at a time.*
+
