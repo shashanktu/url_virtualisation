@@ -7,10 +7,8 @@ import sys
 import os
 import base64
 
-# Add parent directory to path to import from sql.py
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sql import get_url_data, connect_to_retool, delete_response
-# from wiremock import delete_wiremock_data
+
 
 
 # Page config
@@ -19,7 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS
+
 st.markdown("""
 <style>
     .main-header {
@@ -53,10 +51,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header with Logo
-# col_logo, col_title = st.columns([1, 4])
-# with col_logo:
-#     try:
 st.image("src/ValueMomentum_logo.png", width=100)
     
 st.write("")
@@ -66,12 +60,6 @@ st.markdown('<div class="main-header">API Data</div>', unsafe_allow_html=True)
 
 # Main content
 st.subheader(" Mock API Database Records")
-
-# Add refresh button
-
-# Fetch data from database
-
-
 
 
 try:
@@ -152,9 +140,7 @@ try:
                     else:
                         st.error(f"Failed to delete response for record {row['id']}")
 
-        # st.markdown("---")  # Separator line
-
-        # Display options
+       
     else:
         st.info("No records found in the service_virtualisation database")
         st.write("Register the APIs to create mock APIs first.")
