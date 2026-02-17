@@ -2,15 +2,15 @@
 
 ## Overview
 
-A comprehensive web-based service virtualization platform designed to streamline API testing and development workflows. This enterprise-grade solution enables development teams to create, manage, and maintain mock API endpoints without dependency on live external services.
+A comprehensive web-based service virtualization platform designed to streamline API testing and development workflows. This enterprise-grade solution enables development teams to create, manage, and maintain virtualized API endpoints without dependency on live external services.
 
 ## Key Features
 
-- **API Mocking & Virtualization**: Create persistent mock endpoints from real API responses
+- **API Virtualization**: Create persistent virtualized endpoints from real API responses
 - **Automated Response Updates**: Scheduled synchronization with source APIs to maintain data freshness
-- **Multi-Environment Support**: Segregate mocks across Development, Test, Staging, and Production environments
+- **Multi-Environment Support**: Segregate virtualized API's across Development, Test, Staging, and Production environments
 - **Comprehensive Request Configuration**: Support for headers, authentication, query parameters, and request bodies
-- **Real-time API Testing**: Validate APIs before creating mocks with detailed response inspection
+- **Real-time API Testing**: Validate APIs before creating virtualized API's with detailed response inspection
 - **Centralized Management**: Web-based dashboard for viewing and managing all virtualized services
 
 ## Use Cases
@@ -23,16 +23,18 @@ A comprehensive web-based service virtualization platform designed to streamline
 
 ## Architecture
 
+![Architecture](../url_virtualisation/src/image.png)
+
 The platform consists of three core components:
 
 ### 1. Command Center (`Service_Virtualization.py`)
-Web interface for API configuration, testing, and mock creation. Built with Streamlit for rapid development and intuitive user experience.
+Web interface for API configuration, testing, and virtualized API creation. Built with Streamlit for rapid development and intuitive user experience.
 
 ### 2. Routing Portal (`pages/Routing_Portal.py`)
 Administrative dashboard displaying all virtualized services with metadata, timestamps, and management capabilities.
 
 ### 3. Scheduler (`scheduler.py`)
-Background service that periodically polls source APIs and updates mock responses to maintain data accuracy.
+Background service that periodically polls source APIs and updates virtualized API responses to maintain data accuracy.
 
 ## Technical Requirements
 
@@ -96,7 +98,7 @@ Access at: `http://localhost:8501`
 python scheduler.py
 ```
 
-### Creating a Mock API
+### Creating a virtualized API
 
 1. **Configure Request**
    - Enter API name and description
@@ -115,24 +117,24 @@ python scheduler.py
    - Review response status, headers, and body
    - Verify response time and data accuracy
 
-4. **Create Mock**
-   - Click "Mock API" after successful validation
+4. **Create virtualized**
+   - Click "virtualized API" after successful validation
    - System stores configuration and response in database
-   - Routing URL is generated for mock endpoint access
+   - Routing URL is generated for virtualized endpoint access
 
-### Accessing Mock APIs
+### Accessing virtualized APIs
 
-Mock endpoints are accessible via the routing service:
+virtualized endpoints are accessible via the routing service:
 ```
 https://routing-portal-d3id.vercel.app/route?routing_url=<your-api-path>
 ```
 
-### Managing Mocks
+### Managing virtualized API's
 
 Navigate to the Routing Portal to:
 - View all virtualized services in tabular format
 - Monitor creation and update timestamps
-- Delete response data for specific mocks
+- Delete response data for specific virtualized API's
 - Access routing URLs for integration
 
 ## Database Schema
@@ -146,7 +148,7 @@ Navigate to the Routing Portal to:
 | description | TEXT | - | Detailed service description |
 | original_url | TEXT | NOT NULL | Source API endpoint |
 | operation | VARCHAR(50) | - | HTTP method |
-| routing_url | TEXT | NOT NULL | Mock endpoint path |
+| routing_url | TEXT | NOT NULL | virtualized endpoint path |
 | headers | TEXT | - | JSON-encoded request headers |
 | parameters | TEXT | - | JSON-encoded query parameters |
 | response | JSON | - | Cached API response |
@@ -162,8 +164,8 @@ Navigate to the Routing Portal to:
 **Functions:**
 - `connect_to_retool()`: Establishes database connection
 - `create_table()`: Initializes database schema
-- `insert_url_data()`: Persists new mock configuration
-- `get_url_data()`: Retrieves mock records
+- `insert_url_data()`: Persists new virtualized configuration
+- `get_url_data()`: Retrieves virtualized records
 - `update_mock_data()`: Updates cached responses
 - `delete_response()`: Nullifies response data
 
@@ -199,20 +201,20 @@ gatherUsageStats = false
 - Document purpose and special considerations in description field
 
 ### Security
-- Avoid storing production credentials in mock configurations
+- Avoid storing production credentials in virtualized configurations
 - Use environment variables for sensitive data
-- Regularly audit and remove unused mocks
+- Regularly audit and remove unused virtualized API's
 - Implement access controls for production environments
 
 ### Maintenance
 - Run scheduler continuously to maintain data freshness
 - Monitor `scheduler.log` for API failures
-- Periodically review and clean up obsolete mocks
-- Document mock dependencies and usage
+- Periodically review and clean up obsolete virtualized API's
+- Document virtualized dependencies and usage
 
 ### Organization
 - Leverage LOB field to group related services
-- Use environment field to segregate mocks by deployment stage
+- Use environment field to segregate virtualized API's by deployment stage
 - Maintain consistent naming conventions across teams
 
 ## Troubleshooting
@@ -235,7 +237,7 @@ gatherUsageStats = false
 - Confirm database connectivity
 - Check Python process is running
 
-### Stale Mock Data
+### Stale virtualized Data
 - Verify scheduler is running
 - Check last update timestamp in Routing Portal
 - Manually trigger scheduler for immediate update
@@ -276,7 +278,7 @@ The scheduler generates detailed logs in `scheduler.log`:
 - Request/response history and versioning
 - Performance analytics and monitoring dashboards
 - Multi-user collaboration features
-- Import/export functionality for mock configurations
+- Import/export functionality for virtualized configurations
 - Webhook integration for real-time updates
 - API contract testing and validation
 

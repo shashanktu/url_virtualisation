@@ -59,17 +59,17 @@ CREATE TABLE service_virtualisation (
 ### Data Operations
 
 #### `insert_url_data()`
-Inserts a new mock API record into the database.
+Inserts a new virtualized API record into the database.
 
 **Parameters:**
 - `name` (str, required): Display name for the API
 - `original_url` (str, required): The real API endpoint
-- `routing_url` (str, required): Path for the mock API
+- `routing_url` (str, required): Path for the virtualized API
 - `description` (str, optional): Detailed description
 - `operation` (str, optional): HTTP method (GET, POST, PUT, DELETE, PATCH)
 - `headers` (str, optional): JSON string of request headers
 - `parameters` (str, optional): JSON string of query parameters
-- `response` (str, optional): The API response to mock
+- `response` (str, optional): The API response to virtualized API
 - `api_details` (str, optional): Additional metadata as JSON
 - `lob` (str, optional): Line of Business
 - `environment` (str, optional): Environment name (Dev, Test, Staging, Prod)
@@ -103,7 +103,7 @@ print(f"Created record with ID: {record_id}")
 ---
 
 #### `get_url_data(url_id=None)`
-Retrieves mock API records from the database.
+Retrieves virtualized API records from the database.
 
 **Parameters:**
 - `url_id` (int, optional): Specific record ID to retrieve. If None, returns all records.
@@ -116,7 +116,7 @@ Retrieves mock API records from the database.
 - `description`: Description
 - `original_url`: Real API URL
 - `operation`: HTTP method
-- `routing_url`: Mock API path
+- `routing_url`: virtualized API path
 - `headers`: Request headers (JSON string)
 - `parameters`: Query parameters (JSON string)
 - `response`: Saved response data
@@ -143,8 +143,8 @@ if record:
 
 ---
 
-#### `update_mock_data(id, updated_response)`
-Updates the response data for an existing mock API.
+#### `update_virtualized_data(id, updated_response)`
+Updates the response data for an existing virtualized API.
 
 **Parameters:**
 - `id` (int, required): Record ID to update
@@ -154,7 +154,7 @@ Updates the response data for an existing mock API.
 
 **Example:**
 ```python
-from sql import update_mock_data
+from sql import update_virtualized_data
 
 new_response = {
     "id": 123,
@@ -163,9 +163,9 @@ new_response = {
     "updated": True
 }
 
-success = update_mock_data(5, new_response)
+success = update_virtualized_data(5, new_response)
 if success:
-    print("Mock data updated successfully")
+    print("virtualized data updated successfully")
 ```
 
 **Notes:**
@@ -176,7 +176,7 @@ if success:
 ---
 
 #### `delete_response(id)`
-Removes the response data for a mock API (sets it to NULL).
+Removes the response data for a virtualized API (sets it to NULL).
 
 **Parameters:**
 - `id` (int, required): Record ID to update
@@ -195,14 +195,14 @@ if success:
 **Notes:**
 - Does not delete the entire record, only clears the response field
 - Updates the `updated_at` timestamp
-- Useful for temporarily disabling a mock without losing configuration
+- Useful for temporarily disabling a virtualized API without losing configuration
 
 ---
 
 ## Scheduler Functions (scheduler.py)
 
 ### `hit_original_url(record)`
-Tests a single API endpoint and updates its mock data.
+Tests a single API endpoint and updates its virtualized data.
 
 **Parameters:**
 - `record` (dict): Database record containing API configuration
@@ -228,7 +228,7 @@ if records:
 ---
 
 ### `scheduled_health_check()`
-Checks all mock APIs and updates their responses.
+Checks all virtualized APIs and updates their responses.
 
 **Parameters:** None
 
@@ -280,12 +280,12 @@ start_scheduler(interval_hours=2, interval_minutes=0)
 
 ## Routing Endpoints
 
-### Mock API Routing
+### virtualized API Routing
 
 **Base URL:** `https://routing-portal-d3id.vercel.app`
 
 #### `GET /route`
-Returns the mocked response for a given routing URL.
+Returns the virtualized response for a given routing URL.
 
 **Query Parameters:**
 - `routing_url` (required): The routing path stored in the database
@@ -296,7 +296,7 @@ curl "https://routing-portal-d3id.vercel.app/route?routing_url=/api/users/123"
 ```
 
 **Response:**
-Returns the saved mock response with appropriate headers and status code.
+Returns the saved virtualized response with appropriate headers and status code.
 
 **Example Response:**
 ```json
@@ -392,7 +392,7 @@ if result is None:
 - Ensure original APIs are accessible from the scheduler's network
 
 **Security:**
-- Don't store sensitive credentials in mock data
+- Don't store sensitive credentials in virtualized data
 - Use environment variables for database credentials
 - Sanitize user input before storing in database
 
@@ -400,7 +400,7 @@ if result is None:
 
 ## Code Examples
 
-### Complete Mock API Creation
+### Complete virtualized API Creation
 ```python
 from sql import insert_url_data
 import json
@@ -442,10 +442,10 @@ record_id = insert_url_data(
     environment="Dev"
 )
 
-print(f"Created mock API with ID: {record_id}")
+print(f"Created virtualized API with ID: {record_id}")
 ```
 
-### Batch Update All Mocks
+### Batch Update All virtualization's
 ```python
 from sql import get_url_data
 from scheduler import hit_original_url
@@ -460,7 +460,7 @@ for record in records:
         print(f"Updated {record['name']}: {result['success']}")
 
 success_count = sum(1 for r in results if r['success'])
-print(f"\nUpdated {success_count}/{len(results)} mocks successfully")
+print(f"\nUpdated {success_count}/{len(results)} virtualizes successfully")
 ```
 
 ---
