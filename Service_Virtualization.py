@@ -79,10 +79,11 @@ with col1:
     with method_col:
         method = st.selectbox("Method", ["GET", "POST", "PUT", "DELETE", "PATCH"])
     with url_col:
-        url = st.text_input("Enter API URL", placeholder="https://api.example.com/endpoint")
+        url = st.text_input("Enter API URL", placeholder="https://api.example.com/endpoint", label_visibility="visible")
+        st.caption("Note: If mocking JSON directly, enter 'Not Applicable' as URL")
     
     # Tabs for different configurations
-    tab1, tab2, tab3, tab4,tab5 = st.tabs(["Headers", "Authorization", "Body", "Params","API Details"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Headers", "Authorization", "Body", "Params", "Mock Response", "API Details"])
     
     with tab1:
         st.write("**Headers**")
@@ -161,6 +162,20 @@ with col1:
             if key and value:
                 params[key] = value
     with tab5:
+        st.write("**Mock Response (Only for 'Not Applicable' URLs)**")
+        mock_response_text = None
+        if url and url.lower() in ['not applicable', 'na', 'n/a']:
+            mock_response_text = st.text_area("Enter Mock JSON Response", height=200, placeholder='{"status": "success", "data": []}', key="mock_response_input")
+            if mock_response_text:
+                try:
+                    mock_response_json = json.loads(mock_response_text)
+                    st.success("✓ Valid JSON format")
+                except json.JSONDecodeError:
+                    st.error("✗ Invalid JSON format")
+        else:
+            st.info("This tab is only enabled when URL is set to 'Not Applicable'")
+    
+    with tab6:
         st.write("**API Details**")
         st.text_area("API Documentation", height=150)
         st.write("**Environment**")
@@ -179,6 +194,25 @@ with col2:
     if st.button("Validate", type="primary", use_container_width=True):
         if not url:
             st.error("Please enter a URL")
+        elif url.lower() in ['not applicable', 'na', 'n/a']:
+            # Handle Not Applicable URLs with mock response
+            if 'mock_response_input' in st.session_state and st.session_state.mock_response_input:
+                try:
+                    mock_response_json = json.loads(st.session_state.mock_response_input)
+                    st.session_state.validated_response = json.dumps(mock_response_json)
+                    
+                    st.markdown(f"""
+                    <div class="response-success">
+                        <span class="status-code">Status: Mock Response Validated</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.json(mock_response_json)
+                    
+                except json.JSONDecodeError:
+                    st.error("Invalid JSON format in Mock Response tab")
+            else:
+                st.error("Please enter a mock JSON response in the 'Mock Response' tab")
         else:
             try:
                 # Combine headers
@@ -264,11 +298,16 @@ with col2:
             st.error("Please validate an API first to get response data for mocking")
         else:
             try:
-                # Extract path from URL
-                parsed_url = urlparse(url)
-                mock_path = parsed_url.path
-                if parsed_url.query:
-                    mock_path += f"?{parsed_url.query}"
+                # Handle routing URL based on URL type
+                if url.lower() in ['not applicable', 'na', 'n/a']:
+                    # Use name as routing URL for Not Applicable
+                    mock_path = f"/{url_name.lower().replace(' ', '-')}" if url_name else "/unnamed-api"
+                else:
+                    # Extract path from URL
+                    parsed_url = urlparse(url)
+                    mock_path = parsed_url.path
+                    if parsed_url.query:
+                        mock_path += f"?{parsed_url.query}"
                 
                 # Prepare API details as JSON
                 api_details_data = {

@@ -12,49 +12,65 @@ def connect_to_retool():
     )
 
 def list_retool_tables():
-    conn = connect_to_retool()
-    cursor = conn.cursor()
-    cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
-    tables = [row[0] for row in cursor.fetchall()]
-    cursor.close()
-    conn.close()
-    print(tables)
-    return tables
+    try:
+        conn = connect_to_retool()
+        cursor = conn.cursor()
+        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
+        tables = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+        print(tables)
+        return tables
+    except Exception as e:
+        print(f"❌ Error listing tables: {e}")
+        if 'conn' in locals():
+            if 'cursor' in locals():
+                cursor.close()
+            conn.close()
+        return []
 
 def create_table():
-    conn = connect_to_retool()
-    cursor = conn.cursor()
-    # Name table as service virtualisation
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS service_virtualisation (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        original_url TEXT NOT NULL,
-        operation VARCHAR(50),
-        routing_url TEXT NOT NULL,
-        headers TEXT,
-        parameters TEXT,
-        response json,
-        api_details TEXT,
-        lob VARCHAR(100),
-        environment VARCHAR(50),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """
-      
-    cursor.execute(create_table_query)
-    conn.commit()
+    try:
+        conn = connect_to_retool()
+        cursor = conn.cursor()
+        # Name table as service virtualisation
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS service_virtualisation (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            original_url TEXT,
+            operation VARCHAR(50),
+            routing_url TEXT NOT NULL,
+            headers TEXT,
+            parameters TEXT,
+            response json,
+            api_details TEXT,
+            lob VARCHAR(100),
+            environment VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+          
+        cursor.execute(create_table_query)
+        conn.commit()
 
-    cursor.close()
-    conn.close()
-    print("service_virtualisation table created (or already exists)")
+        cursor.close()
+        conn.close()
+        print("service_virtualisation table created (or already exists)")
+    except Exception as e:
+        print(f"❌ Error creating table: {e}")
+        if 'conn' in locals():
+            conn.rollback()
+            if 'cursor' in locals():
+                cursor.close()
+            conn.close()
 
 
 
 
-create_table()
+# create_table()
 
 
 def insert_url_data(name, original_url, routing_url, description=None, operation=None, headers=None, parameters=None, response=None, api_details=None, lob=None, environment=None):
@@ -94,14 +110,15 @@ def insert_url_data(name, original_url, routing_url, description=None, operation
         cursor.close()
         conn.close()
         
-        print(f"✅ Data inserted successfully with ID: {inserted_id}")
+        print(f"Data inserted successfully with ID: {inserted_id}")
         return inserted_id
         
     except Exception as e:
         print(f"❌ Error inserting data: {e}")
         if 'conn' in locals():
             conn.rollback()
-            cursor.close()
+            if 'cursor' in locals():
+                cursor.close()
             conn.close()
         return None
 
@@ -121,7 +138,11 @@ def get_existing_data():
         return records
 
     except Exception as e:
-        print(f" Error retrieving data: {e}")
+        print(f"❌ Error retrieving data: {e}")
+        if 'conn' in locals():
+            if 'cursor' in locals():
+                cursor.close()
+            conn.close()
         return []
 
 
@@ -140,10 +161,10 @@ def get_url_data(url_id=None):
         cursor = conn.cursor()
 
         if url_id:
-            query = "SELECT id, name, description, original_url, operation, routing_url, headers, parameters, response, api_details, lob, environment, created_at, updated_at FROM service_virtualisation WHERE id = %s;"
+            query = "SELECT id, name, description, original_url, operation, routing_url, headers, parameters, response, api_details, lob, environment, created_at, updated_at FROM service_virtualisation WHERE id = %s and original_url!= 'Not Applicable';"
             cursor.execute(query, (url_id,))
         else:
-            query = "SELECT id, name, description, original_url, operation, routing_url, headers, parameters, response, api_details, lob, environment, created_at, updated_at FROM service_virtualisation ORDER BY created_at DESC;"
+            query = "SELECT id, name, description, original_url, operation, routing_url, headers, parameters, response, api_details, lob, environment, created_at, updated_at FROM service_virtualisation WHERE original_url!= 'Not Applicable' ORDER BY created_at DESC;"
             cursor.execute(query)
 
         rows = cursor.fetchall()
@@ -201,7 +222,7 @@ def update_mock_data(id, updated_response):
         return True
 
     except Exception as e:
-        print(f"❌ Error updating mock data: {e}")
+        print(f" Error updating mock data: {e}")
         if 'conn' in locals():
             conn.rollback()
             cursor.close()
@@ -232,155 +253,15 @@ def delete_response(id):
         cursor.close()
         conn.close()
 
-        print(f"✅ Deleted response for record ID {id}")
+        print(f" Deleted response for record ID {id}")
         return True
 
     except Exception as e:
-        print(f"❌ Error deleting response: {e}")
+        print(f" Error deleting response: {e}")
         if 'conn' in locals():
             conn.rollback()
             cursor.close()
             conn.close()
         return False
-
-
-# def update_wiremock_data(id):
-#     """
-#     Update the updated_at timestamp for a specific wiremock record
-    
-#     Args:
-#         id (int): The ID of the record to update
-#     """
-#     try:
-#         conn = connect_to_retool()
-#         cursor = conn.cursor()
-
-#         update_query = """
-#         UPDATE wiremock
-#         SET updated_at = CURRENT_TIMESTAMP
-#         WHERE id = %s;
-#         """
-
-#         cursor.execute(update_query, (id,))
-#         conn.commit()
-        
-#         cursor.close()
-#         conn.close()
-        
-#         print(f"✅ Updated record ID {id} with new updated_at timestamp")
-#         return True
-        
-#     except Exception as e:
-#         print(f"❌ Error updating data: {e}")
-#         if 'conn' in locals():
-#             conn.rollback()
-#             cursor.close()
-#             conn.close()
-#         return False
-    
-
-# def delete_record(record_id):
-#     """Delete a record from the wiremock table"""
-#     try:
-#         conn = connect_to_retool()
-#         cursor = conn.cursor()
-
-#         cursor.execute("UPDATE wiremock SET mock_url='mock url deleted', wiremock_id=NULL WHERE wiremock_id = %s;", (record_id,))
-#         # cursor.execute("DELETE FROM wiremock WHERE id = %s;", (record_id,))
-#         conn.commit()
-        
-#         cursor.close()
-#         conn.close()
-        
-        
-#         return True
-        
-#     except Exception as e:
-#         print(f"❌ Error deleting record: {e}")
-        
-#         return False
-    
-# def get_routing_url():
-#     try:
-#         conn = connect_to_retool()
-#         cursor = conn.cursor()
-
-#         cursor.execute("SELECT routing_url FROM wiremock;")
-#         rows = cursor.fetchall()
-#         # cursor.execute("DELETE FROM wiremock WHERE id = %s;", (record_id,))
-#         conn.commit()
-        
-#         cursor.close()
-#         conn.close()
-        
-#         # print(rows)
-#         return rows
-        
-#     except Exception as e:
-#         print(f"❌ Error deleting record: {e}")
-        
-#         return False
-    
-
-# def update_wiremock_by_routing_url(routing_url, **kwargs):
-#     """
-#     Update wiremock record(s) based on routing_url
-    
-#     Args:
-#         routing_url (str): The routing URL to match for update
-#         **kwargs: Fields to update (original_url, operation, api_details, mock_url, 
-#                  wiremock_id, lob, environment, headers, parameters)
-    
-#     Returns:
-#         int: Number of records updated, or -1 if update failed
-#     """
-#     try:
-#         conn = connect_to_retool()
-#         cursor = conn.cursor()
-
-#         # Build dynamic update query based on provided kwargs
-#         update_fields = []
-#         values = []
-        
-#         for field, value in kwargs.items():
-#             if field in ['original_url', 'operation', 'api_details', 'mock_url', 'wiremock_id', 
-#                         'lob', 'environment', 'headers', 'parameters', 'name', 'description']:
-#                 update_fields.append(f"{field} = %s")
-#                 values.append(value)
-        
-#         if not update_fields:
-#             print("❌ No valid fields provided for update")
-#             return -1
-        
-#         # Always update the updated_at timestamp
-#         update_fields.append("updated_at = CURRENT_TIMESTAMP")
-        
-#         # Add routing_url to values for WHERE clause
-#         values.append(routing_url)
-        
-#         update_query = f"""
-#         UPDATE wiremock
-#         SET {', '.join(update_fields)}
-#         WHERE routing_url = %s;
-#         """
-
-#         cursor.execute(update_query, values)
-#         rows_affected = cursor.rowcount
-#         conn.commit()
-        
-#         cursor.close()
-#         conn.close()
-        
-#         print(f"✅ Updated {rows_affected} record(s) with routing_url: {routing_url}")
-#         return rows_affected
-        
-#     except Exception as e:
-#         print(f"❌ Error updating data: {e}")
-#         if 'conn' in locals():
-#             conn.rollback()
-#             cursor.close()
-#             conn.close()
-#         return None
-
 
 
