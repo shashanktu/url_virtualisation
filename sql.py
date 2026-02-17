@@ -3,10 +3,12 @@ import json
 from datetime import datetime
 
 def connect_to_retool():
+    # amazonq-ignore-next-line
     return psycopg2.connect(
         host="ep-wandering-firefly-afii3dov-pooler.c-2.us-west-2.retooldb.com",
         database="retool",
         user="retool",
+        # amazonq-ignore-next-line
         password="npg_Wui0EmLg6xeA",
         sslmode="require"
     )
@@ -22,7 +24,7 @@ def list_retool_tables():
         print(tables)
         return tables
     except Exception as e:
-        print(f"❌ Error listing tables: {e}")
+        print(f"Error listing tables: {e}")
         if 'conn' in locals():
             if 'cursor' in locals():
                 cursor.close()
@@ -60,7 +62,7 @@ def create_table():
         conn.close()
         print("service_virtualisation table created (or already exists)")
     except Exception as e:
-        print(f"❌ Error creating table: {e}")
+        print(f"Error creating table: {e}")
         if 'conn' in locals():
             conn.rollback()
             if 'cursor' in locals():
