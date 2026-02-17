@@ -23,7 +23,7 @@ A comprehensive web-based service virtualization platform designed to streamline
 
 ## Architecture
 
-![Architecture](../url_virtualisation/src/image.png)
+![Architecture](src/image.png)
 
 The platform consists of three core components:
 
